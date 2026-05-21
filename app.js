@@ -673,6 +673,9 @@ function setupEventListeners() {
   const btnOpenScanner = document.getElementById('btn-open-scanner');
   const btnCloseScanner = document.getElementById('btn-close-scanner');
   let html5QrcodeScanner = null;
+  let trackingRequest = null;
+  let lastDetectionTime = 0;
+  let isScanSuccessful = false;
 
   function startCameraScanner() {
     const instructionEl = document.getElementById('scanner-instruction');
@@ -695,9 +698,37 @@ function setupEventListeners() {
     }
 
     const qrCodeSuccessCallback = (decodedText) => {
-      stopCameraScanner();
-      scannerModal.classList.remove('open');
-      simulateBarcodeScan(decodedText);
+      isScanSuccessful = true;
+      
+      // Dynamic scanning success feedback on the tracked location
+      const brackets = document.getElementById('target-brackets');
+      const viewfinder = document.querySelector('.scan-viewfinder');
+      const flash = document.getElementById('beep-flash');
+
+      if (brackets) brackets.className = 'target-brackets success-scan';
+      if (viewfinder) viewfinder.classList.add('success-scan');
+      if (flash) flash.classList.add('flash');
+      playBeepSynth();
+
+      setTimeout(() => {
+        stopCameraScanner();
+        scannerModal.classList.remove('open');
+        isScanSuccessful = false;
+
+        // Reset elements
+        if (brackets) {
+          brackets.className = 'target-brackets scanning';
+          brackets.style.left = '';
+          brackets.style.top = '';
+          brackets.style.width = '';
+          brackets.style.height = '';
+          brackets.style.transform = '';
+        }
+        if (viewfinder) viewfinder.classList.remove('success-scan');
+        if (flash) flash.classList.remove('flash');
+
+        simulateBarcodeScan(decodedText, true);
+      }, 350);
     };
 
     const config = { fps: 10, qrbox: { width: 250, height: 150 }, aspectRatio: 1.0 };
@@ -705,6 +736,9 @@ function setupEventListeners() {
     html5QrcodeScanner.start({ facingMode: "environment" }, config, qrCodeSuccessCallback, () => {})
       .then(() => {
         if (instructionEl) instructionEl.innerText = "Align barcode within the brackets";
+        
+        // Start checking for the video element and launch tracking loop
+        pollForVideoAndStartTracking();
       })
       .catch((err) => {
         console.error("Camera startup failed:", err);
@@ -718,7 +752,156 @@ function setupEventListeners() {
       });
   }
 
+  function pollForVideoAndStartTracking() {
+    let attempts = 0;
+    const interval = setInterval(() => {
+      const video = document.querySelector('#scan-camera-feed video');
+      if (video) {
+        clearInterval(interval);
+        startTrackingLoop(video);
+      }
+      attempts++;
+      if (attempts > 50) { // Timeout after 5s
+        clearInterval(interval);
+      }
+    }, 100);
+  }
+
+  function startTrackingLoop(video) {
+    if (typeof window.BarcodeDetector === 'undefined') {
+      console.log("BarcodeDetector API not supported in this browser. Using static guide.");
+      return;
+    }
+
+    // Initialize BarcodeDetector with supported formats
+    let detector;
+    try {
+      detector = new BarcodeDetector({
+        formats: ['qr_code', 'ean_13', 'code_128', 'code_39', 'upc_a', 'upc_e', 'codabar', 'data_matrix', 'itf']
+      });
+    } catch (e) {
+      console.warn("Failed to initialize BarcodeDetector:", e);
+      return;
+    }
+
+    const brackets = document.getElementById('target-brackets');
+    const viewfinder = document.querySelector('.scan-viewfinder');
+    if (!brackets || !viewfinder) return;
+
+    function tick() {
+      // Exit if scanner is stopped, video is paused/ended, or a scan was successful (locking brackets for the success flash)
+      if (!html5QrcodeScanner || !html5QrcodeScanner.isScanning || video.paused || video.ended || isScanSuccessful) {
+        if (!isScanSuccessful) resetTrackingBox();
+        return;
+      }
+
+      detector.detect(video)
+        .then(barcodes => {
+          if (barcodes.length > 0) {
+            const barcode = barcodes[0];
+            lastDetectionTime = Date.now();
+            updateTrackingBox(barcode.boundingBox);
+          } else {
+            if (Date.now() - lastDetectionTime > 400) {
+              resetTrackingBox();
+            }
+          }
+
+          if (html5QrcodeScanner && html5QrcodeScanner.isScanning && !isScanSuccessful) {
+            trackingRequest = requestAnimationFrame(tick);
+          }
+        })
+        .catch(err => {
+          console.error("Barcode detection error:", err);
+          if (html5QrcodeScanner && html5QrcodeScanner.isScanning && !isScanSuccessful) {
+            trackingRequest = requestAnimationFrame(tick);
+          }
+        });
+    }
+
+    function updateTrackingBox(box) {
+      const videoRect = video.getBoundingClientRect();
+      const viewfinderRect = viewfinder.getBoundingClientRect();
+
+      if (!video.videoWidth || !video.videoHeight) return;
+
+      const containerWidth = viewfinderRect.width;
+      const containerHeight = viewfinderRect.height;
+      const videoWidth = video.videoWidth;
+      const videoHeight = video.videoHeight;
+
+      const containerRatio = containerWidth / containerHeight;
+      const videoRatio = videoWidth / videoHeight;
+
+      let renderWidth, renderHeight, offsetX, offsetY;
+
+      // Map object-fit: cover mapping
+      if (videoRatio > containerRatio) {
+        renderHeight = containerHeight;
+        renderWidth = containerHeight * videoRatio;
+        offsetX = (containerWidth - renderWidth) / 2;
+        offsetY = 0;
+      } else {
+        renderWidth = containerWidth;
+        renderHeight = containerWidth / videoRatio;
+        offsetX = 0;
+        offsetY = (containerHeight - renderHeight) / 2;
+      }
+
+      const scaleX = renderWidth / videoWidth;
+      const scaleY = renderHeight / videoHeight;
+
+      // Transform video-relative coordinates to viewfinder-relative coordinates
+      const x = offsetX + (box.x * scaleX);
+      const y = offsetY + (box.y * scaleY);
+      const w = box.width * scaleX;
+      const h = box.height * scaleY;
+
+      // Keep within bounds of the viewfinder (with small margin)
+      const padding = 10;
+      const targetX = Math.max(padding, Math.min(x, containerWidth - w - padding));
+      const targetY = Math.max(padding, Math.min(y, containerHeight - h - padding));
+      const targetW = Math.max(60, Math.min(w, containerWidth - 2 * padding));
+      const targetH = Math.max(40, Math.min(h, containerHeight - 2 * padding));
+
+      brackets.style.left = `${targetX}px`;
+      brackets.style.top = `${targetY}px`;
+      brackets.style.width = `${targetW}px`;
+      brackets.style.height = `${targetH}px`;
+      brackets.style.transform = 'none';
+      brackets.classList.add('detected');
+      brackets.classList.remove('scanning');
+    }
+
+    function resetTrackingBox() {
+      brackets.style.left = '';
+      brackets.style.top = '';
+      brackets.style.width = '';
+      brackets.style.height = '';
+      brackets.style.transform = '';
+      brackets.classList.remove('detected');
+      if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
+        brackets.classList.add('scanning');
+      }
+    }
+
+    trackingRequest = requestAnimationFrame(tick);
+  }
+
   function stopCameraScanner() {
+    if (trackingRequest) {
+      cancelAnimationFrame(trackingRequest);
+      trackingRequest = null;
+    }
+    const brackets = document.getElementById('target-brackets');
+    if (brackets) {
+      brackets.className = 'target-brackets scanning';
+      brackets.style.left = '';
+      brackets.style.top = '';
+      brackets.style.width = '';
+      brackets.style.height = '';
+      brackets.style.transform = '';
+    }
     if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
       html5QrcodeScanner.stop().then(() => {
         html5QrcodeScanner.clear();
@@ -1045,7 +1228,7 @@ function renderToolsGrid() {
 }
 
 // Process scanned or manually entered barcode
-function simulateBarcodeScan(barcode) {
+function simulateBarcodeScan(barcode, skipFeedback = false) {
   const brackets = document.getElementById('target-brackets');
   
   // Normalize barcode
@@ -1059,7 +1242,12 @@ function simulateBarcodeScan(barcode) {
   const tool = state.tools.find(t => String(t.barcode || '').trim().toLowerCase() === cleanBarcode.toLowerCase());
   
   if (tool) {
-    executeSuccessfulScan(tool);
+    if (skipFeedback) {
+      addToolToCart(tool);
+      showToast(`Scanned: ${tool.name}`);
+    } else {
+      executeSuccessfulScan(tool);
+    }
     return;
   }
   
@@ -1081,7 +1269,12 @@ function simulateBarcodeScan(barcode) {
           state.tools.push(data.tool);
           localStorage.setItem('cached_sheet_tools', JSON.stringify(state.tools));
           renderToolsGrid();
-          executeSuccessfulScan(data.tool);
+          if (skipFeedback) {
+            addToolToCart(data.tool);
+            showToast(`Scanned: ${data.tool.name}`);
+          } else {
+            executeSuccessfulScan(data.tool);
+          }
         } else {
           showToast('Unknown Barcode: ' + cleanBarcode);
         }
@@ -1100,9 +1293,11 @@ function simulateBarcodeScan(barcode) {
 function executeSuccessfulScan(tool) {
   const brackets = document.getElementById('target-brackets');
   const flash = document.getElementById('beep-flash');
+  const viewfinder = document.querySelector('.scan-viewfinder');
 
   // Animation triggers
   if (brackets) brackets.className = 'target-brackets success-scan';
+  if (viewfinder) viewfinder.classList.add('success-scan');
   
   // Trigger screen flash (green tint)
   if (flash) {
@@ -1114,6 +1309,7 @@ function executeSuccessfulScan(tool) {
 
   setTimeout(() => {
     if (brackets) brackets.className = 'target-brackets scanning';
+    if (viewfinder) viewfinder.classList.remove('success-scan');
     if (flash) {
       flash.classList.remove('flash');
     }
