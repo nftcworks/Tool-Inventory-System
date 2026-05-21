@@ -1,0 +1,139 @@
+{
+  "tools": [
+    {
+      "id": "pwr-001",
+      "name": "DeWalt Cordless Drill 20V",
+      "barcode": "8800112233",
+      "category": "Power tools",
+      "icon": "⚡",
+      "description": "High performance 20V Max cordless drill/driver. Keyless chuck.",
+      "specs": "20V Max, 2-Speed, 1/2-inch Chuck"
+    },
+    {
+      "id": "pwr-002",
+      "name": "Makita Circular Saw 7-1/4\"",
+      "barcode": "8800112244",
+      "category": "Power tools",
+      "icon": "🪚",
+      "description": "Powerful 15 Amp motor circular saw for heavy-duty cutting.",
+      "specs": "15 Amp, 5800 RPM, 7-1/4\" Blade"
+    },
+    {
+      "id": "pwr-003",
+      "name": "Bosch Angle Grinder 4-1/2\"",
+      "barcode": "8800112255",
+      "category": "Power tools",
+      "icon": "⚙️",
+      "description": "Professional high-power motor grinder for grinding, cutting, and brushing.",
+      "specs": "6.0 Amp, 11000 RPM, Lock-on switch"
+    },
+    {
+      "id": "pwr-004",
+      "name": "Ryobi Corded Jigsaw 4.8A",
+      "barcode": "8800112266",
+      "category": "Power tools",
+      "icon": "🧩",
+      "description": "Orbital jigsaw with SpeedMatch selector and integrated laser pointer.",
+      "specs": "4.8 Amp, 0-3000 SPM, Toolless blade clamp"
+    },
+    {
+      "id": "pwr-005",
+      "name": "Wagner Dual-Temp Heat Gun",
+      "barcode": "8800112277",
+      "category": "Power tools",
+      "icon": "🔥",
+      "description": "Dual temperature settings (750°F and 1000°F) for paint stripping and thawing.",
+      "specs": "1200 Watts, Dual Heat Settings"
+    },
+    {
+      "id": "hnd-001",
+      "name": "Stanley Claw Hammer 16oz",
+      "barcode": "9900112233",
+      "category": "Hand tools",
+      "icon": "🔨",
+      "description": "Fiberglass claw hammer for strength, durability, and shock absorption.",
+      "specs": "16 oz head, Rip claw, Slip-resistant grip"
+    },
+    {
+      "id": "hnd-002",
+      "name": "Craftsman Screwdriver Set (8-Piece)",
+      "barcode": "9900112244",
+      "category": "Hand tools",
+      "icon": "🪛",
+      "description": "Assorted Phillips and slotted screwdrivers with magnetic tips.",
+      "specs": "Chrome-plated blades, Satin-grip handles"
+    },
+    {
+      "id": "hnd-003",
+      "name": "Crescent Adjustable Wrench 10\"",
+      "barcode": "9900112255",
+      "category": "Hand tools",
+      "icon": "🔧",
+      "description": "Wider jaw opening adjustable wrench, chrome finish.",
+      "specs": "10-inch length, 1-5/16\" jaw capacity"
+    },
+    {
+      "id": "hnd-004",
+      "name": "Knipex Combination Pliers 8\"",
+      "barcode": "9900112266",
+      "category": "Hand tools",
+      "icon": "✂️",
+      "description": "Heavy duty linesman combination pliers for gripping, bending, and cutting.",
+      "specs": "8-inch length, Multi-component handles"
+    },
+    {
+      "id": "hnd-005",
+      "name": "Lufkin Tape Measure 25ft",
+      "barcode": "9900112277",
+      "category": "Hand tools",
+      "icon": "📏",
+      "description": "Self-locking measuring tape with easy-to-read markings and belt clip.",
+      "specs": "25-foot length, 1-inch width blade"
+    },
+    {
+      "id": "mat-001",
+      "name": "Wood Screws Box (100pcs)",
+      "barcode": "7700112233",
+      "category": "Materials",
+      "icon": "🔩",
+      "description": "#8 x 2-inch flat head zinc-plated Phillips wood screws.",
+      "specs": "100-pack, #8 Thread size, 2\" length"
+    },
+    {
+      "id": "mat-002",
+      "name": "Gorilla Wood Glue 18oz",
+      "barcode": "7700112244",
+      "category": "Materials",
+      "icon": "🧴",
+      "description": "Water-resistant, high-strength wood adhesive for carpentry and repairs.",
+      "specs": "18 oz, Natural wood color finish"
+    },
+    {
+      "id": "mat-003",
+      "name": "3M Sandpaper Variety Pack",
+      "barcode": "7700112255",
+      "category": "Materials",
+      "icon": "📄",
+      "description": "Assorted grits (80, 120, 220) for wood, metal, and plastic sanding.",
+      "specs": "9 x 11 inch sheets, 5-pack assortment"
+    },
+    {
+      "id": "mat-004",
+      "name": "Gorilla Heavy Duty Duct Tape",
+      "barcode": "7700112266",
+      "category": "Materials",
+      "icon": "🩹",
+      "description": "Thick double-adhesive duct tape. Weatherproof shell.",
+      "specs": "1.88\" x 35 yd, Black, Extra strong grip"
+    },
+    {
+      "id": "mat-005",
+      "name": "Scotch Electrical Tape Black",
+      "barcode": "7700112277",
+      "category": "Materials",
+      "icon": "🧵",
+      "description": "Vinyl electrical insulating tape, fire-retardant and weather-resistant.",
+      "specs": "3/4\" x 66 ft, 7 mil thickness"
+    }
+  ]
+}

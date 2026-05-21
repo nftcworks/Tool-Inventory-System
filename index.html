@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#f5f5f7">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Tool Inventory System</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- Screen beep flash overlay -->
+  <div id="beep-flash" class="beep-effect"></div>
+
+  <!-- Main Header -->
+  <header>
+    <div class="logo-container">
+      <div class="logo-icon-wrapper">
+        <svg class="logo-svg" viewBox="0 0 24 24" fill="none" stroke="url(#logo-gradient)" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <defs>
+            <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#0071e3" />
+              <stop offset="100%" stop-color="#00c7ff" />
+            </linearGradient>
+          </defs>
+          <path
+            d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+        </svg>
+      </div>
+      <div class="logo-text">Tool Inventory</div>
+      <div class="logo-badge">Beta</div>
+      <!-- Mobile hamburger moved next to browser name; shown only in dashboard or for admin -->
+      <button id="nav-hamburger-right" class="nav-hamburger-right" style="display: none;" aria-label="Open Settings">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="6" x2="20" y2="6"></line>
+          <line x1="4" y1="12" x2="20" y2="12"></line>
+          <line x1="4" y1="18" x2="20" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Sidebar Profile (Visible only in Dashboard Mode on Desktop) -->
+    <div id="sidebar-profile" class="sidebar-profile" style="display: none;">
+      <div class="profile-avatar">
+        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="var(--text-secondary)" stroke-width="1.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </div>
+      <div class="profile-info">
+        <div class="profile-name" id="sidebar-user-name">Borrower Name</div>
+        <div class="profile-course" id="sidebar-user-course">Course & Section</div>
+      </div>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <div id="sidebar-nav" class="sidebar-nav" style="display: none;">
+      <button class="sidebar-nav-item active" id="sidebar-dashboard-btn" type="button">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+        <span>Dashboard</span>
+      </button>
+      <button class="sidebar-nav-item" id="sidebar-inventory-btn" type="button">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="8" y1="6" x2="21" y2="6"></line>
+          <line x1="8" y1="12" x2="21" y2="12"></line>
+          <line x1="8" y1="18" x2="21" y2="18"></line>
+          <line x1="3" y1="6" x2="3.01" y2="6"></line>
+          <line x1="3" y1="12" x2="3.01" y2="12"></line>
+          <line x1="3" y1="18" x2="3.01" y2="18"></line>
+        </svg>
+        <span>Inventory</span>
+      </button>
+      <button class="sidebar-nav-item" id="sidebar-edit-profile" type="button">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span>Edit Profile</span>
+      </button>
+      <button class="sidebar-nav-item dev-only" id="sidebar-sync-settings" type="button" style="display:none;">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 2v6h-6"></path>
+          <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
+          <path d="M3 22v-6h6"></path>
+          <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+        </svg>
+        <span>Sync Settings</span>
+      </button>
+      <button class="sidebar-nav-item dev-only" id="sidebar-api-settings" type="button" style="display:none;">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 18 22 12 16 6"></polyline>
+          <polyline points="8 6 2 12 8 18"></polyline>
+        </svg>
+        <span>API Settings</span>
+      </button>
+      <button class="sidebar-nav-item text-danger" id="sidebar-logout" type="button" style="color: var(--danger-color); margin-top: auto;">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+        <span>Logout</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Content Workspace -->
+  <main class="app-container">
+
+    <!-- STEP 1: Log-in / Sign-up Card -->
+    <div class="card active" id="step1-card">
+      <div class="card-nav" id="step1-nav" style="display: none;">
+        <button type="button" class="card-back-btn" id="btn-back-signin" title="Go back to Sign In">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          <span>Back</span>
+        </button>
+      </div>
+      <div class="auth-header">
+        <h2 id="auth-title">Sign in</h2>
+        <p id="auth-desc">Use your academic Google credentials to proceed.</p>
+      </div>
+
+      <form id="login-form">
+        <div class="input-group">
+          <label class="input-label" for="student-number" id="auth-field-label">Student Number</label>
+          <div class="input-field-wrapper">
+            <input type="text" id="student-number" class="input-field" placeholder="e.g., 2022-12739-MN-0" required
+              autocomplete="off">
+          </div>
+        </div>
+
+        <div class="input-group signup-only" id="confirm-student-number-group" style="display: none;">
+          <label class="input-label" for="confirm-student-number">Confirm Student Number</label>
+          <div class="input-field-wrapper">
+            <input type="text" id="confirm-student-number" class="input-field" placeholder="e.g., 2024-11729-MN-0"
+              autocomplete="off">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label" for="password">Password</label>
+          <div class="input-field-wrapper">
+            <input type="password" id="password" class="input-field" placeholder="••••••••" required
+              autocomplete="current-password">
+          </div>
+        </div>
+
+        <div class="input-group signup-only" id="confirm-password-group" style="display: none;">
+          <label class="input-label" for="confirm-password">Confirm Password</label>
+          <div class="input-field-wrapper">
+            <input type="password" id="confirm-password" class="input-field" placeholder="••••••••"
+              autocomplete="new-password">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="auth-submit-btn" style="margin-top: 10px;">
+          Continue with Password
+        </button>
+      </form>
+
+      <div class="auth-divider">or</div>
+
+      <button class="google-btn" type="button" id="google-auth-btn" onclick="handleGoogleSignIn()">
+        <svg class="google-icon" viewBox="0 0 24 24">
+          <path fill="#4285F4"
+            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+          <path fill="#34A853"
+            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+          <path fill="#FBBC05"
+            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22c-.17-.26-.29-.53-.37-.81l.02-.82z" />
+          <path fill="#EA4335"
+            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+        </svg>
+        <span id="google-auth-btn-text">Sign in with Google</span>
+      </button>
+
+      <div class="auth-toggle-container" style="text-align: center; margin-top: 20px;">
+        <button type="button" class="btn-link" id="toggle-auth-mode-btn">Don't have an account? Sign up</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: Student & Class Information Card -->
+    <div class="card" id="step2-card">
+      <div class="card-nav">
+        <button type="button" class="card-back-btn" id="btn-back-step1" title="Go back to Sign In">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          <span>Back</span>
+        </button>
+      </div>
+      <div class="auth-header">
+        <h2>Student & Class Information</h2>
+        <p>Please enter details about the borrower and current class context.</p>
+      </div>
+
+      <form id="student-form">
+        <div class="input-group">
+          <label class="input-label" for="student-name">Borrower’s Full Name</label>
+          <div class="input-field-wrapper">
+            <input type="text" id="student-name" class="input-field" placeholder="e.g., John Doe" required>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label" for="student-course">ITech Diploma Course</label>
+          <div class="input-field-wrapper">
+            <select id="student-course" class="input-field" required>
+              <option value="" disabled selected>Select your course...</option>
+              <option value="Diploma in Civil Engineering Technology (DCvET)">Diploma in Civil Engineering Technology
+                (DCvET)</option>
+              <option value="Diploma in Computer Engineering Technology (DCET)">Diploma in Computer Engineering
+                Technology (DCET)</option>
+              <option value="Diploma in Electrical Engineering Technology (DEET)">Diploma in Electrical Engineering
+                Technology (DEET)</option>
+              <option value="Diploma in Electronics Engineering Technology (DECET)">Diploma in Electronics Engineering
+                Technology (DECET)</option>
+              <option value="Diploma in Information Communication Technology (DICT)">Diploma in Information
+                Communication Technology (DICT)</option>
+              <option value="Diploma in Mechanical Engineering Technology (DMET)">Diploma in Mechanical Engineering
+                Technology (DMET)</option>
+              <option value="Diploma in Office Management Technology (DOMT)">Diploma in Office Management Technology
+                (DOMT)</option>
+              <option value="Diploma in Railway Engineering Technology (DRET)">Diploma in Railway Engineering Technology
+                (DRET)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label" for="student-section">Section & Year</label>
+          <div class="input-field-wrapper">
+            <select id="student-section" class="input-field" required disabled>
+              <option value="" disabled selected>Select course first...</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="input-group">
+            <label class="input-label" for="student-instructor">Professor / Instructor</label>
+            <div class="input-field-wrapper">
+              <input type="text" id="student-instructor" class="input-field" placeholder="e.g., Engr. Robert Smith"
+                required>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="student-subject">Subject / Course Code</label>
+            <div class="input-field-wrapper">
+              <input type="text" id="student-subject" class="input-field" placeholder="e.g., ME-302 Workshop Practice"
+                required>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Continue to Logging</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- STEP 3: Tool Logging Card -->
+    <div class="card" id="step3-card" style="padding: 24px;">
+      <div class="dashboard-header" style="margin-bottom: 20px;">
+        <div class="dashboard-greeting">
+          <div class="greeting-text-wrapper">
+            <span class="greeting-text">Welcome,</span>
+            <span id="dashboard-user-name" class="user-name">User</span>
+          </div>
+        </div>
+        <div style="position: relative; margin-left: auto;">
+          <button id="dashboard-user-menu-btn" class="user-menu-btn" aria-label="User Menu">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="4" y1="6" x2="20" y2="6"></line>
+              <line x1="4" y1="12" x2="20" y2="12"></line>
+              <line x1="4" y1="18" x2="20" y2="18"></line>
+            </svg>
+          </button>
+          <div id="user-dropdown-menu" class="user-dropdown dropdown-right">
+            <button class="dropdown-item" id="dropdown-edit-details">Edit Profile</button>
+            <button class="dropdown-item dev-only" id="dropdown-sync" style="display:none;">Sync Settings</button>
+            <button class="dropdown-item dev-only" id="dropdown-api" style="display:none;">API Settings</button>
+            <button class="dropdown-item text-danger" id="dropdown-logout">Logout</button>
+          </div>
+        </div>
+        <div class="dashboard-brand" style="display: none;">
+          <div class="logo-icon-wrapper">
+            <svg class="logo-svg" viewBox="0 0 24 24" fill="none" stroke="url(#dashboard-logo-gradient)" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <defs>
+                <linearGradient id="dashboard-logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#0071e3" />
+                  <stop offset="100%" stop-color="#00c7ff" />
+                </linearGradient>
+              </defs>
+              <path
+                d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+            </svg>
+          </div>
+          <div class="logo-text">Tool Inventory</div>
+        </div>
+      </div>
+
+      <div class="logging-workspace">
+        <!-- Left: Logging workspace controls -->
+        <div class="workspace-inputs">
+
+          <!-- Unified List Catalog container -->
+          <div class="manual-container">
+            <div class="search-row">
+              <div class="search-box">
+                <svg class="search-icon-svg-left" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--text-secondary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="search-input" class="search-input"
+                  placeholder="Search catalog by name, category...">
+              </div>
+              <button type="button" class="btn-scan-modal desktop-scan-btn" id="btn-open-scanner" title="Scan Tools">
+                <svg class="scan-icon-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                  stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
+                  <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
+                  <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
+                  <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
+                  <line x1="7" y1="12" x2="17" y2="12"></line>
+                </svg>
+                <span>Scan Tools</span>
+              </button>
+            </div>
+
+            <!-- Category scroller selection tabs -->
+            <div class="categories-scroller">
+              <button class="category-pill-btn active" data-category="all">All Items</button>
+              <button class="category-pill-btn" data-category="Power tools">Power Tools</button>
+              <button class="category-pill-btn" data-category="Hand tools">Hand Tools</button>
+              <button class="category-pill-btn" data-category="Materials">Materials</button>
+            </div>
+
+            <!-- Grid container for catalog items -->
+            <div class="tools-grid" id="tools-grid">
+              <!-- Javascript renders list of cards -->
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right: Borrowing Summary Sidebar (Cart) -->
+        <div class="workspace-cart">
+          <div class="cart-panel">
+            <div class="cart-header">
+              <div class="cart-title">
+                <span>Borrowed Items</span>
+                <span class="cart-badge" id="cart-count">0</span>
+              </div>
+              <button class="cart-clear-btn" id="cart-clear-btn">Clear All</button>
+            </div>
+
+            <!-- List scrollable box -->
+            <div class="cart-items-container" id="cart-items">
+              <!-- Javascript inserts cart items -->
+            </div>
+
+            <!-- Mandatory Verification Box (Required by Step 3) -->
+            <div class="verification-box" id="verification-box">
+              <label class="verification-label" id="verification-label">
+                <input type="checkbox" id="verify-list-checkbox">
+                <span>I verify that the list of tools above is correct and matches my actual physical equipment
+                  check.</span>
+              </label>
+            </div>
+
+            <div class="form-actions" style="margin-top: 16px;">
+              <button type="button" class="btn btn-primary" id="btn-submit-booking">Complete Booking</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4: Success Ticket Card -->
+    <div class="card" id="step4-card">
+      <div class="receipt-wrapper">
+        <div class="receipt-ticket">
+          <!-- Wallet header -->
+          <div class="receipt-header">
+            <h3>Equipment Pass</h3>
+            <p>Borrowing Authorized</p>
+          </div>
+
+          <!-- Dotted cut divider -->
+          <div class="receipt-divider"></div>
+
+          <!-- Body items details -->
+          <div class="receipt-body">
+
+            <div class="receipt-section">
+              <div class="receipt-section-title">Borrower Info</div>
+              <div class="receipt-grid">
+                <div class="receipt-meta-item">
+                  <span class="receipt-meta-label">NAME</span>
+                  <span class="receipt-meta-val" id="receipt-name">-</span>
+                </div>
+                <div class="receipt-meta-item">
+                  <span class="receipt-meta-label" id="receipt-auth-label">STUDENT NUMBER</span>
+                  <span class="receipt-meta-val" id="receipt-student-number">-</span>
+                </div>
+                <div class="receipt-meta-item" style="grid-column: 1 / -1; margin-top: 6px;">
+                  <span class="receipt-meta-label">COURSE</span>
+                  <span class="receipt-meta-val" id="receipt-course">-</span>
+                </div>
+                <div class="receipt-meta-item" style="margin-top: 6px;">
+                  <span class="receipt-meta-label">SECTION</span>
+                  <span class="receipt-meta-val" id="receipt-section">-</span>
+                </div>
+                <div class="receipt-meta-item" style="margin-top: 6px;">
+                  <span class="receipt-meta-label">INSTRUCTOR</span>
+                  <span class="receipt-meta-val" id="receipt-instructor">-</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="receipt-section">
+              <div class="receipt-section-title">Transaction Details</div>
+              <div class="receipt-grid">
+                <div class="receipt-meta-item">
+                  <span class="receipt-meta-label">DATE & TIME</span>
+                  <span class="receipt-meta-val" id="receipt-date">-</span>
+                </div>
+                <div class="receipt-meta-item">
+                  <span class="receipt-meta-label">SUBJECT</span>
+                  <span class="receipt-meta-val" id="receipt-subject">-</span>
+                </div>
+                <div class="receipt-meta-item" style="grid-column: 1 / -1; margin-top: 6px;">
+                  <span class="receipt-meta-label">PASS NUMBER</span>
+                  <span class="receipt-meta-val" id="receipt-txn"
+                    style="font-family: monospace; letter-spacing: 0.5px;">-</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="receipt-section">
+              <div class="receipt-section-title">Borrowed Tools</div>
+              <div id="receipt-tools-list">
+                <!-- Javascript populates receipt items -->
+              </div>
+            </div>
+
+            <!-- Wallet graphic barcode -->
+            <div class="barcode-wrapper">
+              <div class="mock-barcode"></div>
+              <div class="barcode-text" id="receipt-barcode-text">TXN-00000000000</div>
+            </div>
+
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-primary" id="btn-receipt-done">
+          Done & Reset Session
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav id="mobile-bottom-nav" class="mobile-bottom-nav">
+      <button type="button" class="nav-item active" data-tab="catalog" id="nav-catalog-btn">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+        <span>Catalog</span>
+      </button>
+      <button type="button" class="nav-item nav-scan-btn" id="nav-scan-btn">
+        <div class="scan-btn-inner">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
+            <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
+            <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
+            <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
+            <line x1="7" y1="12" x2="17" y2="12"></line>
+          </svg>
+        </div>
+        <span>Scan</span>
+      </button>
+      <!-- Settings/hamburger moved to header on mobile for clearer alignment with app name -->
+      <button type="button" class="nav-item" data-tab="cart" id="nav-cart-btn">
+        <div class="cart-icon-wrapper">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <path d="M16 10a4 4 0 0 1-8 0"></path>
+          </svg>
+          <span class="nav-badge" id="nav-cart-count">0</span>
+        </div>
+        <span>Cart</span>
+      </button>
+    </nav>
+
+  </main>
+
+  <!-- Bottom Drawer Indicator for Future Google Sheets Integration -->
+  <button class="payload-drawer-toggle" id="drawer-toggle-btn">
+    Inspect Sheets API JSON Payload
+  </button>
+
+  <!-- Google Sheets JSON API Drawer -->
+  <div class="payload-drawer" id="developer-drawer">
+    <div class="payload-drawer-header">
+      <div class="payload-drawer-title">
+        <span>Google Sheets V4 API Payload Preview</span>
+        <span class="payload-badge">Active State</span>
+      </div>
+      <button class="payload-drawer-close" id="drawer-close-btn">✕</button>
+    </div>
+    <div class="payload-drawer-body">
+      <pre class="payload-code"><code id="payload-code-block">Loading payload state...</code></pre>
+    </div>
+    <div class="payload-drawer-footer">
+      <button class="btn btn-secondary" id="copy-payload-btn" style="padding: 8px 16px; font-size: 13px; width: auto;">
+        Copy JSON Payload
+      </button>
+    </div>
+  </div>
+
+  <!-- Scanner Overlay Modal -->
+  <div id="scanner-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Simulated Tool Scanner</h3>
+        <button type="button" class="modal-close-btn" id="btn-close-scanner" aria-label="Close Scanner">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="scanner-container">
+          <div class="scan-viewfinder">
+            <div class="scanner-viewfinder-overlay">
+              <div class="target-brackets scanning" id="target-brackets"></div>
+              <div class="laser-line" id="laser-line"></div>
+            </div>
+
+            <!-- Mock visual grid for camera simulator -->
+            <svg class="scan-camera-feed" viewBox="0 0 100 100" preserveAspectRatio="none">
+              <defs>
+                <pattern id="modal-grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                  <path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255, 255, 255, 0.15)" stroke-width="0.5" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#modal-grid)" />
+            </svg>
+
+            <div class="scanner-instruction">Simulating Camera Viewfinder</div>
+          </div>
+
+          <!-- Manual Barcode Input inside simulator for accessibility -->
+          <div class="input-group" style="margin-bottom: 8px;">
+            <label class="input-label" for="barcode-mock-input">Barcode Input (Simulation)</label>
+            <div class="input-field-wrapper" style="gap: 8px;">
+              <input type="text" id="barcode-mock-input" class="input-field"
+                placeholder="Enter barcode number (e.g. 8800112233)" style="padding-left: 16px;">
+              <button type="button" class="btn btn-primary" id="barcode-submit-btn"
+                style="width: auto; padding: 13px 20px;">Scan</button>
+            </div>
+          </div>
+
+          <div class="simulator-panel">
+            <div class="simulator-header">
+              <span>Barcode Scan Simulator</span>
+            </div>
+            <p style="font-size: 11px; color: var(--text-secondary); margin-bottom: 8px;">
+              Click any tool below to simulate scanning its barcode labels under the camera viewfinder:
+            </p>
+            <div class="simulator-pills" id="sim-pills-list">
+              <!-- Javascript fills here -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal for Google Sheets Sync -->
+  <div id="settings-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Inventory Settings</h3>
+        <button type="button" class="modal-close-btn" id="btn-close-settings" aria-label="Close Settings">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="settings-container">
+
+          <!-- Sync Status Indicator Box -->
+          <div class="sync-status-box info-mode" id="sync-status-box">
+            <div class="sync-status-pulse" id="sync-status-pulse"></div>
+            <div class="sync-status-content">
+              <div class="sync-status-title" id="sync-status-title">Mock Database Mode</div>
+              <div class="sync-status-desc" id="sync-status-desc">Using offline simulated tool database. Connect a
+                Google Sheet to fetch live tools.</div>
+            </div>
+          </div>
+
+          <form id="settings-sync-form" style="margin-top: 16px;">
+            <div class="input-group">
+              <label class="input-label" for="setting-spreadsheet-id">Google Spreadsheet ID</label>
+              <div class="input-field-wrapper">
+                <input type="text" id="setting-spreadsheet-id" class="input-field"
+                  placeholder="e.g. 1a2b3c4d5e6f7g8h9i..." autocomplete="off">
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label class="input-label" for="setting-tab-name">Sheet Tab Name</label>
+              <div class="input-field-wrapper">
+                <input type="text" id="setting-tab-name" class="input-field" placeholder="Inventory" value="Inventory"
+                  autocomplete="off" required>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label class="input-label" for="setting-api-url">Apps Script Web App URL (For Checkout Database)</label>
+              <div class="input-field-wrapper">
+                <input type="url" id="setting-api-url" class="input-field"
+                  placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off">
+              </div>
+            </div>
+
+            <div class="settings-actions">
+              <button type="submit" class="btn btn-primary" id="btn-settings-sync"
+                style="padding: 12px; font-size: 14px;">Sync Database</button>
+              <button type="button" class="btn btn-secondary" id="btn-settings-demo"
+                style="padding: 12px; font-size: 14px;">Load Demo Sheet</button>
+            </div>
+
+            <button type="button" class="btn-link" id="btn-settings-disconnect"
+              style="display: none; width: 100%; text-align: center; margin-top: 12px; color: var(--danger-color); font-weight: 600;">
+              Disconnect Google Sheet & Use Mock Data
+            </button>
+          </form>
+
+          <!-- Sheet Setup Guide Panel -->
+          <div class="sheet-guide-panel">
+            <div class="guide-header">Google Sheet Setup Instructions</div>
+
+            <div class="guide-step">
+              <span class="step-num">1</span>
+              <span>Create a Google Sheet with a tab named <strong>Inventory</strong>.</span>
+            </div>
+
+            <div class="guide-step">
+              <span class="step-num">2</span>
+              <span>Define these column headers exactly in the first row:</span>
+            </div>
+
+            <!-- Table of headers preview -->
+            <div class="guide-table-wrapper">
+              <table class="guide-table">
+                <thead>
+                  <tr>
+                    <th>id</th>
+                    <th>name</th>
+                    <th>barcode</th>
+                    <th>category</th>
+                    <th>icon</th>
+                    <th>description</th>
+                    <th>specs</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>pwr-001</td>
+                    <td>DeWalt Drill</td>
+                    <td>8800112233</td>
+                    <td>Power tools</td>
+                    <td>⚡</td>
+                    <td>Cordless drill</td>
+                    <td>20V Max, 2-Speed</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="guide-step">
+              <span class="step-num">3</span>
+              <span>Share your Google Sheet: Click <strong>Share</strong> (top-right) &rarr; Change General Access to
+                <strong>Anyone with the link can view</strong>.</span>
+            </div>
+
+            <div class="guide-step">
+              <span class="step-num">4</span>
+              <span>Copy the Spreadsheet ID from the URL:
+                <code>https://docs.google.com/spreadsheets/d/<strong>[SPREADSHEET_ID]</strong>/edit</code> and paste it
+                above.</span>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dashboard Borrower Details Editor -->
+  <div id="details-modal" class="modal-overlay">
+    <div class="modal-card details-modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Edit Borrower Details</h3>
+        <button type="button" class="modal-close-btn" id="btn-close-details" aria-label="Close Details Editor">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="settings-container">
+          <div class="sync-status-box info-mode">
+            <div class="sync-status-content">
+              <div class="sync-status-title">Dashboard-only editor</div>
+              <div class="sync-status-desc">Update the current borrower profile without leaving the dashboard.</div>
+            </div>
+          </div>
+
+          <form id="details-form">
+            <div class="input-group">
+              <label class="input-label" for="details-student-name">Borrower’s Full Name</label>
+              <div class="input-field-wrapper">
+                <input type="text" id="details-student-name" class="input-field" placeholder="e.g., John Doe" required>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label class="input-label" for="details-student-course">ITech Diploma Course</label>
+              <div class="input-field-wrapper">
+                <select id="details-student-course" class="input-field" required>
+                  <option value="" disabled selected>Select your course...</option>
+                  <option value="Diploma in Civil Engineering Technology (DCvET)">Diploma in Civil Engineering Technology (DCvET)</option>
+                  <option value="Diploma in Computer Engineering Technology (DCET)">Diploma in Computer Engineering Technology (DCET)</option>
+                  <option value="Diploma in Electrical Engineering Technology (DEET)">Diploma in Electrical Engineering Technology (DEET)</option>
+                  <option value="Diploma in Electronics Engineering Technology (DECET)">Diploma in Electronics Engineering Technology (DECET)</option>
+                  <option value="Diploma in Information Communication Technology (DICT)">Diploma in Information Communication Technology (DICT)</option>
+                  <option value="Diploma in Mechanical Engineering Technology (DMET)">Diploma in Mechanical Engineering Technology (DMET)</option>
+                  <option value="Diploma in Office Management Technology (DOMT)">Diploma in Office Management Technology (DOMT)</option>
+                  <option value="Diploma in Railway Engineering Technology (DRET)">Diploma in Railway Engineering Technology (DRET)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label class="input-label" for="details-student-section">Section & Year</label>
+              <div class="input-field-wrapper">
+                <select id="details-student-section" class="input-field" required disabled>
+                  <option value="" disabled selected>Select course first...</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="input-group">
+                <label class="input-label" for="details-student-instructor">Professor / Instructor</label>
+                <div class="input-field-wrapper">
+                  <input type="text" id="details-student-instructor" class="input-field" placeholder="e.g., Engr. Robert Smith" required>
+                </div>
+              </div>
+
+              <div class="input-group">
+                <label class="input-label" for="details-student-subject">Subject / Course Code</label>
+                <div class="input-field-wrapper">
+                  <input type="text" id="details-student-subject" class="input-field" placeholder="e.g., ME-302 Workshop Practice" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-actions">
+              <button type="button" class="btn btn-secondary" id="btn-details-cancel">Cancel</button>
+              <button type="submit" class="btn btn-primary">Save Details</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notification system -->
+  <div class="toast" id="toast-notification">
+    <span id="toast-text">Message goes here</span>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>

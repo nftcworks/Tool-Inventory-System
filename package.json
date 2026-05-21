@@ -1,0 +1,17 @@
+{
+  "name": "tool-inventory-system",
+  "version": "1.0.0",
+  "description": "Apple-like Tool Inventory System Frontend",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx -y serve ."
+  },
+  "keywords": [
+    "inventory",
+    "apple-style",
+    "frontend",
+    "google-sheets"
+  ],
+  "author": "",
+  "license": "ISC"
+}
