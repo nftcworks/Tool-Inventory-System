@@ -5,11 +5,12 @@
   <meta charset="UTF-8">
   <meta name="viewport"
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#f5f5f7">
+  <meta name="theme-color" content="#ffffff">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Tool Inventory System</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 
 <body>
@@ -549,51 +550,41 @@
   <!-- Scanner Overlay Modal -->
   <div id="scanner-modal" class="modal-overlay">
     <div class="modal-card">
-      <div class="modal-header">
-        <h3 class="modal-title">Simulated Tool Scanner</h3>
-        <button type="button" class="modal-close-btn" id="btn-close-scanner" aria-label="Close Scanner">✕</button>
+      <div class="modal-header ios-nav-header">
+        <button type="button" class="modal-back-btn" id="btn-close-scanner" aria-label="Close Scanner">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          <span>Back</span>
+        </button>
+        <h3 class="modal-title">Scanner</h3>
+        <div class="modal-header-right"></div>
       </div>
       <div class="modal-body">
         <div class="scanner-container">
           <div class="scan-viewfinder">
             <div class="scanner-viewfinder-overlay">
-              <div class="target-brackets scanning" id="target-brackets"></div>
-              <div class="laser-line" id="laser-line"></div>
+              <div class="target-brackets scanning" id="target-brackets">
+                <div class="scan-area-laser">
+                  <div class="laser-line" id="laser-line"></div>
+                </div>
+              </div>
             </div>
 
-            <!-- Mock visual grid for camera simulator -->
-            <svg class="scan-camera-feed" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <defs>
-                <pattern id="modal-grid" width="10" height="10" patternUnits="userSpaceOnUse">
-                  <path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255, 255, 255, 0.15)" stroke-width="0.5" />
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#modal-grid)" />
-            </svg>
+            <!-- Camera feed container -->
+            <div id="scan-camera-feed" class="scan-camera-feed"></div>
 
-            <div class="scanner-instruction">Simulating Camera Viewfinder</div>
+            <div class="scanner-instruction" id="scanner-instruction">Initializing Camera...</div>
           </div>
 
-          <!-- Manual Barcode Input inside simulator for accessibility -->
-          <div class="input-group" style="margin-bottom: 8px;">
-            <label class="input-label" for="barcode-mock-input">Barcode Input (Simulation)</label>
-            <div class="input-field-wrapper" style="gap: 8px;">
+          <!-- Manual Barcode Input for accessibility and fallback -->
+          <div class="manual-barcode-panel">
+            <label class="input-label" for="barcode-mock-input">Or enter barcode manually</label>
+            <div class="input-field-wrapper">
               <input type="text" id="barcode-mock-input" class="input-field"
-                placeholder="Enter barcode number (e.g. 8800112233)" style="padding-left: 16px;">
+                placeholder="Type barcode number & press Scan" style="padding-left: 16px;">
               <button type="button" class="btn btn-primary" id="barcode-submit-btn"
-                style="width: auto; padding: 13px 20px;">Scan</button>
-            </div>
-          </div>
-
-          <div class="simulator-panel">
-            <div class="simulator-header">
-              <span>Barcode Scan Simulator</span>
-            </div>
-            <p style="font-size: 11px; color: var(--text-secondary); margin-bottom: 8px;">
-              Click any tool below to simulate scanning its barcode labels under the camera viewfinder:
-            </p>
-            <div class="simulator-pills" id="sim-pills-list">
-              <!-- Javascript fills here -->
+                style="width: auto; padding: 13px 24px; white-space: nowrap;">Scan</button>
             </div>
           </div>
         </div>
@@ -604,9 +595,15 @@
   <!-- Settings Modal for Google Sheets Sync -->
   <div id="settings-modal" class="modal-overlay">
     <div class="modal-card">
-      <div class="modal-header">
-        <h3 class="modal-title">Inventory Settings</h3>
-        <button type="button" class="modal-close-btn" id="btn-close-settings" aria-label="Close Settings">✕</button>
+      <div class="modal-header ios-nav-header">
+        <button type="button" class="modal-back-btn" id="btn-close-settings" aria-label="Close Settings">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          <span>Back</span>
+        </button>
+        <h3 class="modal-title">Settings</h3>
+        <div class="modal-header-right"></div>
       </div>
       <div class="modal-body">
         <div class="settings-container">
@@ -724,9 +721,15 @@
   <!-- Dashboard Borrower Details Editor -->
   <div id="details-modal" class="modal-overlay">
     <div class="modal-card details-modal-card">
-      <div class="modal-header">
-        <h3 class="modal-title">Edit Borrower Details</h3>
-        <button type="button" class="modal-close-btn" id="btn-close-details" aria-label="Close Details Editor">✕</button>
+      <div class="modal-header ios-nav-header">
+        <button type="button" class="modal-back-btn" id="btn-close-details" aria-label="Close Details Editor">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          <span>Back</span>
+        </button>
+        <h3 class="modal-title">Edit Details</h3>
+        <div class="modal-header-right"></div>
       </div>
       <div class="modal-body">
         <div class="settings-container">

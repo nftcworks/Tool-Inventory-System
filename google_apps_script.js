@@ -1,7 +1,6 @@
 /**
- * Tool Inventory System - Backend API
  * 
- * Instructions:
+ * Instructions PREEEEEEEEEEEEEEEEEEEEEEE:
  * 1. Open your Google Sheet.
  * 2. Click Extensions > Apps Script.
  * 3. Delete any existing code and paste this entire script.
@@ -13,14 +12,18 @@
  * 9. Copy the generated "Web app URL" and paste it into the Tool Inventory System settings.
  */
 
-// ========== GET: Look up a user by student ID ==========
+// ========== GET: Look up a user or a tool ==========
 function doGet(e) {
   try {
     const action = e.parameter.action || 'lookup';
-    const studentId = (e.parameter.studentId || '').trim().toUpperCase();
     const ss = SpreadsheetApp.getActiveSpreadsheet();
 
-    if (action === 'lookup' && studentId) {
+    if (action === 'lookup') {
+      const studentId = (e.parameter.studentId || '').trim().toUpperCase();
+      if (!studentId) {
+        return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Missing studentId parameter" }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
       // Check if "Users" tab exists
       let usersSheet = ss.getSheetByName("Users");
       if (!usersSheet) {
@@ -48,6 +51,62 @@ function doGet(e) {
       }
 
       // Not found
+      return ContentService.createTextOutput(JSON.stringify({ status: "not_found" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    if (action === 'toolLookup') {
+      const barcode = (e.parameter.barcode || '').trim().toLowerCase();
+      if (!barcode) {
+        return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Missing barcode parameter" }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+
+      let invSheet = ss.getSheetByName("Inventory");
+      if (!invSheet) {
+        return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Inventory sheet tab not found" }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+
+      const data = invSheet.getDataRange().getValues();
+      if (data.length < 2) {
+        return ContentService.createTextOutput(JSON.stringify({ status: "not_found" }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+
+      const headers = data[0].map(h => String(h).trim().toLowerCase());
+      const idIdx = headers.indexOf('id');
+      const nameIdx = headers.indexOf('name');
+      const barcodeIdx = headers.indexOf('barcode');
+      const categoryIdx = headers.indexOf('category');
+      const iconIdx = headers.indexOf('icon');
+      const descIdx = headers.indexOf('description');
+      const specsIdx = headers.indexOf('specs');
+
+      if (barcodeIdx === -1) {
+        return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Barcode column not found in Inventory sheet" }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+
+      for (let i = 1; i < data.length; i++) {
+        const row = data[i];
+        if (String(row[barcodeIdx]).trim().toLowerCase() === barcode) {
+          const tool = {
+            id: idIdx !== -1 ? String(row[idIdx]).trim() : "",
+            name: nameIdx !== -1 ? String(row[nameIdx]).trim() : "",
+            barcode: String(row[barcodeIdx]).trim(),
+            category: categoryIdx !== -1 ? String(row[categoryIdx]).trim() : "General",
+            icon: iconIdx !== -1 ? String(row[iconIdx]).trim() : "🔧",
+            description: descIdx !== -1 ? String(row[descIdx]).trim() : "",
+            specs: specsIdx !== -1 ? String(row[specsIdx]).trim() : ""
+          };
+          return ContentService.createTextOutput(JSON.stringify({
+            status: "found",
+            tool: tool
+          })).setMimeType(ContentService.MimeType.JSON);
+        }
+      }
+
       return ContentService.createTextOutput(JSON.stringify({ status: "not_found" }))
         .setMimeType(ContentService.MimeType.JSON);
     }

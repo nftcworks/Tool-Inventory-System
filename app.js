@@ -203,7 +203,6 @@ function loadToolsDatabase() {
 
 function initializeUI() {
   renderToolsGrid();
-  renderSimulatorPills();
   updateDeveloperPayload();
 }
 
@@ -673,11 +672,66 @@ function setupEventListeners() {
   const scannerModal = document.getElementById('scanner-modal');
   const btnOpenScanner = document.getElementById('btn-open-scanner');
   const btnCloseScanner = document.getElementById('btn-close-scanner');
+  let html5QrcodeScanner = null;
+
+  function startCameraScanner() {
+    const instructionEl = document.getElementById('scanner-instruction');
+    if (instructionEl) instructionEl.innerText = "Initializing Camera...";
+    
+    // Check if browser supports mediaDevices api
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      if (instructionEl) {
+        if (!window.isSecureContext) {
+          instructionEl.innerHTML = "Camera disabled: HTTPS required.<br><span style='font-size: 11px; opacity: 0.8;'>Mobile browsers require a secure connection (HTTPS) to access the camera.</span>";
+        } else {
+          instructionEl.innerText = "Camera API not supported in this browser. Use manual input.";
+        }
+      }
+      return;
+    }
+
+    if (!html5QrcodeScanner) {
+      html5QrcodeScanner = new Html5Qrcode("scan-camera-feed");
+    }
+
+    const qrCodeSuccessCallback = (decodedText) => {
+      stopCameraScanner();
+      scannerModal.classList.remove('open');
+      simulateBarcodeScan(decodedText);
+    };
+
+    const config = { fps: 10, qrbox: { width: 250, height: 150 }, aspectRatio: 1.0 };
+
+    html5QrcodeScanner.start({ facingMode: "environment" }, config, qrCodeSuccessCallback, () => {})
+      .then(() => {
+        if (instructionEl) instructionEl.innerText = "Align barcode within the brackets";
+      })
+      .catch((err) => {
+        console.error("Camera startup failed:", err);
+        if (instructionEl) {
+          if (!window.isSecureContext) {
+            instructionEl.innerHTML = "Insecure Origin: HTTPS required.<br><span style='font-size: 11px; opacity: 0.8;'>Mobile browsers only allow camera access on HTTPS or localhost.</span>";
+          } else {
+            instructionEl.innerText = "Camera access denied. Enable permissions or use manual input.";
+          }
+        }
+      });
+  }
+
+  function stopCameraScanner() {
+    if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
+      html5QrcodeScanner.stop().then(() => {
+        html5QrcodeScanner.clear();
+      }).catch(err => console.error("Failed to stop scanner:", err));
+    }
+  }
 
   if (btnOpenScanner && scannerModal) {
     btnOpenScanner.addEventListener('click', () => {
       scannerModal.classList.add('open');
-      // Focus barcode input for quick simulation
+      startCameraScanner();
+      
+      // Focus barcode input for quick simulation fallback
       setTimeout(() => {
         const barcodeInput = document.getElementById('barcode-mock-input');
         if (barcodeInput) barcodeInput.focus();
@@ -687,6 +741,7 @@ function setupEventListeners() {
 
   if (btnCloseScanner && scannerModal) {
     btnCloseScanner.addEventListener('click', () => {
+      stopCameraScanner();
       scannerModal.classList.remove('open');
     });
   }
@@ -694,6 +749,7 @@ function setupEventListeners() {
   if (scannerModal) {
     scannerModal.addEventListener('click', (e) => {
       if (e.target === scannerModal) {
+        stopCameraScanner();
         scannerModal.classList.remove('open');
       }
     });
@@ -988,44 +1044,67 @@ function renderToolsGrid() {
   });
 }
 
-// Render simulation pills for scanner
-function renderSimulatorPills() {
-  const container = document.getElementById('sim-pills-list');
-  if (!container) return;
-  
-  container.innerHTML = '';
-  
-  state.tools.forEach(tool => {
-    const pill = document.createElement('button');
-    pill.className = 'sim-pill';
-    pill.innerHTML = `${tool.name} (${tool.barcode})`;
-    pill.addEventListener('click', () => {
-      simulateBarcodeScan(tool.barcode);
-    });
-    container.appendChild(pill);
-  });
-}
-
-// Simulation of Scan logic
+// Process scanned or manually entered barcode
 function simulateBarcodeScan(barcode) {
-  const viewfinder = document.getElementById('scan-viewfinder-overlay');
   const brackets = document.getElementById('target-brackets');
-  const laser = document.getElementById('laser-line');
   
-  // Find tool
-  const tool = state.tools.find(t => t.barcode === barcode);
-  
-  if (!tool) {
-    showToast('Unknown Barcode: ' + barcode);
+  // Normalize barcode
+  const cleanBarcode = String(barcode).trim();
+  if (!cleanBarcode) {
+    showToast('Please enter a barcode');
     return;
   }
+  
+  // 1. Search locally first
+  const tool = state.tools.find(t => String(t.barcode || '').trim().toLowerCase() === cleanBarcode.toLowerCase());
+  
+  if (tool) {
+    executeSuccessfulScan(tool);
+    return;
+  }
+  
+  // 2. If not found locally, and Google Sheets API is set, fetch from database tab via Apps Script API
+  if (state.apiUrl) {
+    const instructionEl = document.getElementById('scanner-instruction');
+    const originalInstruction = instructionEl ? instructionEl.innerText : 'Align barcode within the brackets';
+    if (instructionEl) instructionEl.innerText = "Checking inventory database...";
+    
+    const lookupUrl = `${state.apiUrl}?action=toolLookup&barcode=${encodeURIComponent(cleanBarcode)}`;
+    
+    fetch(lookupUrl)
+      .then(response => response.json())
+      .then(data => {
+        if (instructionEl) instructionEl.innerText = originalInstruction;
+        
+        if (data.status === 'found' && data.tool) {
+          // Found on live sheet inventory! Cache it locally and add to tools grid
+          state.tools.push(data.tool);
+          localStorage.setItem('cached_sheet_tools', JSON.stringify(state.tools));
+          renderToolsGrid();
+          executeSuccessfulScan(data.tool);
+        } else {
+          showToast('Unknown Barcode: ' + cleanBarcode);
+        }
+      })
+      .catch(error => {
+        console.error('API barcode lookup failed:', error);
+        if (instructionEl) instructionEl.innerText = originalInstruction;
+        showToast('Unknown Barcode (Lookup connection error): ' + cleanBarcode);
+      });
+  } else {
+    showToast('Unknown Barcode: ' + cleanBarcode);
+  }
+}
+
+// Visual & Audio scan success feedback
+function executeSuccessfulScan(tool) {
+  const brackets = document.getElementById('target-brackets');
+  const flash = document.getElementById('beep-flash');
 
   // Animation triggers
-  brackets.className = 'target-brackets success-scan';
-  laser.className = 'laser-line success-scan';
+  if (brackets) brackets.className = 'target-brackets success-scan';
   
   // Trigger screen flash (green tint)
-  const flash = document.getElementById('beep-flash');
   if (flash) {
     flash.classList.add('flash');
   }
@@ -1034,8 +1113,7 @@ function simulateBarcodeScan(barcode) {
   playBeepSynth();
 
   setTimeout(() => {
-    brackets.className = 'target-brackets scanning';
-    laser.className = 'laser-line';
+    if (brackets) brackets.className = 'target-brackets scanning';
     if (flash) {
       flash.classList.remove('flash');
     }
@@ -1390,6 +1468,8 @@ function resetBorrowingSession() {
   updateSectionOptions();
   document.getElementById('student-instructor').value = '';
   document.getElementById('student-subject').value = '';
+  const mockInput = document.getElementById('barcode-mock-input');
+  if (mockInput) mockInput.value = '';
   
   // Clear checkbox
   const checkbox = document.getElementById('verify-list-checkbox');
