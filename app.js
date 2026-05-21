@@ -698,6 +698,7 @@ function setupEventListeners() {
     }
 
     const qrCodeSuccessCallback = (decodedText) => {
+      if (isScanSuccessful) return;
       isScanSuccessful = true;
       
       // Dynamic scanning success feedback on the tracked location
@@ -889,6 +890,7 @@ function setupEventListeners() {
   }
 
   function stopCameraScanner() {
+    isScanSuccessful = false;
     if (trackingRequest) {
       cancelAnimationFrame(trackingRequest);
       trackingRequest = null;
